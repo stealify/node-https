@@ -43,7 +43,6 @@
     "wbuf": "^1.7.2",
     "handle-thing": "^1.2.5",
     "http-deceiver": "^1.2.7",
-    "safe-buffer": "^5.0.1",
     "select-hose": "^2.0.0",
     "spdy-transport": "^2.0.18"
   },
