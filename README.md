@@ -59,7 +59,7 @@ server.listen(3000);
 
 Client:
 ```javascript
-var { https, createAgent } = require('node-https');
+var { get, createAgent } = require('node-https');
 
 var agent = createAgent({
   host: 'www.google.com',
@@ -75,10 +75,7 @@ var agent = createAgent({
   }
 });
 
-https.get({
-  host: 'www.google.com',
-  agent: agent
-}, function(response) {
+get({ host: 'www.google.com', agent }, (response) => {
   console.log('yikes');
   // Here it goes like with any other node.js HTTP request
   // ...
@@ -105,7 +102,7 @@ It is possible to initiate [PUSH_PROMISE][5] to send content to clients _before_
 the client requests it.
 
 ```javascript
-createServer(options, function(req, res) {
+createServer(options, (req, res) => {
   var stream = res.push('/main.js', {
     status: 200, // optional
     method: 'GET', // optional
@@ -136,16 +133,11 @@ Second argument contains headers for both PUSH_PROMISE and emulated response.
 Client usage:
 ```javascript
 var agent = createAgent({ /* ... */ });
-var req = http.get({
-  host: 'www.google.com',
-  agent: agent
-}, function(response) {
-});
-req.on('push', function(stream) {
-  stream.on('error', function(err) {
-    // Handle error
-  });
-  // Read data from stream
+var req = get({ host: 'www.google.com', agent }, (response) => {...});
+
+req.on('push', (stream) => {
+  stream.on('error', (err) => console.error);
+  // Read data from stream.pipe()
 });
 ```
 
@@ -157,20 +149,18 @@ uncaught exception and crash your program.
 
 Server usage:
 ```javascript
-function (req, res) {
+(req, res) => {
   // Send trailing headers to client
   res.addTrailers({ header1: 'value1', header2: 'value2' });
 
   // On client's trailing headers
-  req.on('trailers', function(headers) {
-    // ...
-  });
+  req.on('trailers', (headers) => console.log);
 }
 ```
 
 Client usage:
 ```javascript
-var req = http.request({ agent: createAgent, /* ... */ }).function (res) {
+var req = http.request({ agent }).(res) =>{
   // On server's trailing headers
   res.on('trailers', function(headers) {
     // ...
