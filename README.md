@@ -49,7 +49,23 @@ var options = {
   }
 };
 
-var server = createServer(options, function(req, res) {
+var server = createServer({
+  key: fs.readFileSync(__dirname + '/keys/spdy-key.pem'), // => Private key
+  cert: fs.readFileSync(__dirname + '/keys/spdy-fullchain.pem'), // => Fullchain file or cert file (prefer the former)
+  spdy: { //=>  SPDY-specific options
+    protocols: [ 'h2', 'spdy/3.1', ..., 'http/1.1' ],
+    plain: false,
+    // Parse first incoming X_FORWARDED_FOR frame and puts it to req.headers
+    // NOTE: Use with care! This should not be used without some proxy that
+    // will *always* send X_FORWARDED_FOR
+    'x-forwarded-for': true,
+    connection: {
+      windowSize: 1024 * 1024, // Server's window size
+      // if true - server will send 3.1 frames on 3.0 *plain* spdy
+      autoSpdy31: false
+    }
+  }
+}, (req, res) => {
   res.writeHead(200);
   res.end('hello world!');
 });
