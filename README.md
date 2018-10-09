@@ -18,7 +18,7 @@ This module named `spdy` but it [provides](https://github.com/indutny/node-spdy/
 
 Server:
 ```javascript
-var spdy = require('spdy'),
+var { createServer } = require('node-https'),
     fs = require('fs');
 
 var options = {
@@ -49,7 +49,7 @@ var options = {
   }
 };
 
-var server = spdy.createServer(options, function(req, res) {
+var server = createServer(options, function(req, res) {
   res.writeHead(200);
   res.end('hello world!');
 });
@@ -59,10 +59,9 @@ server.listen(3000);
 
 Client:
 ```javascript
-var spdy = require('spdy');
-var https = require('https');
+var { https, createAgent } = require('node-https');
 
-var agent = spdy.createAgent({
+var agent = createAgent({
   host: 'www.google.com',
   port: 443,
 
@@ -94,12 +93,10 @@ errors will result in an uncaught exception. To handle these errors subscribe
 to the `error` event and re-emit the captured error:
 
 ```javascript
-var agent = spdy.createAgent({
-  host: 'www.google.com',
-  port: 443
-}).once('error', function (err) {
-  this.emit(err);
-});
+var agent = createAgent({..})
+    .once('error', function (err) {
+      this.emit(err);
+    });
 ```
 
 #### Push streams
@@ -108,7 +105,7 @@ It is possible to initiate [PUSH_PROMISE][5] to send content to clients _before_
 the client requests it.
 
 ```javascript
-spdy.createServer(options, function(req, res) {
+createServer(options, function(req, res) {
   var stream = res.push('/main.js', {
     status: 200, // optional
     method: 'GET', // optional
@@ -138,7 +135,7 @@ Second argument contains headers for both PUSH_PROMISE and emulated response.
 
 Client usage:
 ```javascript
-var agent = spdy.createAgent({ /* ... */ });
+var agent = createAgent({ /* ... */ });
 var req = http.get({
   host: 'www.google.com',
   agent: agent
@@ -173,7 +170,7 @@ function (req, res) {
 
 Client usage:
 ```javascript
-var req = http.request({ agent: spdyAgent, /* ... */ }).function (res) {
+var req = http.request({ agent: createAgent, /* ... */ }).function (res) {
   // On server's trailing headers
   res.on('trailers', function(headers) {
     // ...
@@ -186,9 +183,9 @@ req.end();
 
 #### Options
 
-All options supported by [tls][2] work with node-spdy.
+All options supported by [tls][2] work with node-https.
 
-Additional options may be passed via `spdy` sub-object:
+Additional options may be passed via `https` sub-object:
 
 * `plain` - if defined, server will ignore NPN and ALPN data and choose whether
   to use spdy or plain http by looking at first data packet.
@@ -209,7 +206,7 @@ API is compatible with `http` and `https` module, but you can use another
 function as base class for SPDYServer.
 
 ```javascript
-spdy.createServer(
+createServer(
   [base class constructor, i.e. https.Server],
   { /* keys and options */ }, // <- the only one required argument
   [request listener]
@@ -238,7 +235,7 @@ is `true` when the request was processed using HTTP2/SPDY protocols, it is
 
 This software is licensed under the MIT License.
 
-Copyright Fedor Indutny, 2015.
+Copyright DIREKTSPEED, 2018.
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
