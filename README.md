@@ -19,39 +19,11 @@ This module named `node-https` but it [provides](https://github.com/indutny/node
 Server:
 ```javascript
 var { createServer } = require('node-https'),
-    fs = require('fs');
-
-var options = {
-  // Private key
-  key: fs.readFileSync(__dirname + '/keys/spdy-key.pem'),
-
-  // Fullchain file or cert file (prefer the former)
-  cert: fs.readFileSync(__dirname + '/keys/spdy-fullchain.pem'),
-
-  // **optional** SPDY-specific options
-  spdy: {
-    protocols: [ 'h2', 'spdy/3.1', ..., 'http/1.1' ],
-    plain: false,
-
-    // **optional**
-    // Parse first incoming X_FORWARDED_FOR frame and put it to the
-    // headers of every request.
-    // NOTE: Use with care! This should not be used without some proxy that
-    // will *always* send X_FORWARDED_FOR
-    'x-forwarded-for': true,
-
-    connection: {
-      windowSize: 1024 * 1024, // Server's window size
-
-      // **optional** if true - server will send 3.1 frames on 3.0 *plain* spdy
-      autoSpdy31: false
-    }
-  }
-};
+    { readFileSync } = require('fs');
 
 var server = createServer({
-  key: fs.readFileSync(__dirname + '/keys/spdy-key.pem'), // => Private key
-  cert: fs.readFileSync(__dirname + '/keys/spdy-fullchain.pem'), // => Fullchain file or cert file (prefer the former)
+  key: readFileSync(__dirname + '/keys/spdy-key.pem'), // => Private key
+  cert: readFileSync(__dirname + '/keys/spdy-fullchain.pem'), // => Fullchain file or cert file (prefer the former)
   spdy: { //=>  SPDY-specific options
     protocols: [ 'h2', 'spdy/3.1', ..., 'http/1.1' ],
     plain: false,
@@ -80,13 +52,9 @@ var { get, createAgent } = require('node-https');
 var agent = createAgent({
   host: 'www.google.com',
   port: 443,
-
-  // Optional SPDY options
-  spdy: {
+  spdy: { // => optional
     plain: false,
     ssl: true,
-
-    // **optional** send X_FORWARDED_FOR
     'x-forwarded-for': '127.0.0.1'
   }
 });
@@ -101,15 +69,13 @@ get({ host: 'www.google.com', agent }, (response) => {
 }).end();
 ```
 
-Please note that if you use a custom agent, by default all connection-level
+Please note that if you use a custom agent with https.get or http.get, by default all connection-level
 errors will result in an uncaught exception. To handle these errors subscribe
 to the `error` event and re-emit the captured error:
 
 ```javascript
 var agent = createAgent({..})
-    .once('error', function (err) {
-      this.emit(err);
-    });
+    .once('error',(err)=>this.emit);
 ```
 
 #### Push streams
@@ -129,10 +95,8 @@ createServer(options, (req, res) => {
       'content-type': 'application/javascript'
     }
   });
-  stream.on('error', function() {
-  });
+  stream.on('error',(err) => console.error);
   stream.end('alert("hello from push stream!");');
-
   res.end('<script src="/main.js"></script>');
 }).listen(3000);
 ```
@@ -165,21 +129,17 @@ uncaught exception and crash your program.
 
 Server usage:
 ```javascript
-(req, res) => {
-  // Send trailing headers to client
-  res.addTrailers({ header1: 'value1', header2: 'value2' });
-
-  // On client's trailing headers
-  req.on('trailers', (headers) => console.log);
+(req, res) => { 
+  res.addTrailers({ header1: 'value1', header2: 'value2' }); // Send trailing headers to client
+  req.on('trailers', (headers) => console.log);   // On client's trailing headers
 }
 ```
 
 Client usage:
 ```javascript
 var req = http.request({ agent }).(res) =>{
-  // On server's trailing headers
-  res.on('trailers', function(headers) {
-    // ...
+  res.on('trailers', (headers) => { 
+    // On server's trailing headers
   });
 });
 req.write('stuff');
